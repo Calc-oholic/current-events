@@ -1,6 +1,11 @@
+from flask import Flask, render_template, jsonify
+import requests
+from datetime import datetime, timedelta
+import os
+
 app = Flask(__name__)
 
-NEWS_API_KEY = os.getenv('NEWS_API_KEY', '101d2f72ecb3458aa8614823f25f8ad6')
+NEWS_API_KEY = '101d2f72ecb3458aa8614823f25f8ad6'
 
 def fetch_news():
     url = "https://newsapi.org/v2/top-headlines"
