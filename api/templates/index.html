@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest News Headlines</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .fetch-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .fetch-button:hover {
+            background-color: #0056b3;
+        }
+
+        .news-container {
+            display: none;
+        }
+
+        .article {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .article h2 {
+            margin-top: 0;
+            color: #1a1a1a;
+            font-size: 20px;
+        }
+
+        .article p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: #888;
+            margin-top: 15px;
+        }
+
+        .article a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .article a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Latest News Headlines</h1>
+            <button id="fetchNews" class="fetch-button">NEW NEWS</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            Loading latest headlines...
+        </div>
+
+        <div id="newsContainer" class="news-container"></div>
+    </div>
+
+    <script>
+        document.getElementById('fetchNews').addEventListener('click', async () => {
+            const newsContainer = document.getElementById('newsContainer');
+            const loading = document.getElementById('loading');
+            
+            // Show loading state
+            loading.style.display = 'block';
+            newsContainer.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/news');
+                const articles = await response.json();
+                
+                // Clear previous articles
+                newsContainer.innerHTML = '';
+                
+                // Add new articles
+                articles.forEach(article => {
+                    const articleElement = document.createElement('div');
+                    articleElement.className = 'article';
+                    
+                    const date = new Date(article.publishedAt).toLocaleDateString();
+                    
+                    articleElement.innerHTML = `
+                        <h2>${article.title}</h2>
+                        <p>${article.summary}</p>
+                        <div class="article-meta">
+                            <span>${article.source}</span> | 
+                            <span>${date}</span> | 
+                            <a href="${article.url}" target="_blank">Read more</a>
+                        </div>
+                    `;
+                    
+                    newsContainer.appendChild(articleElement);
+                });
+                
+                // Show the news container
+                newsContainer.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                newsContainer.innerHTML = '<p>Error loading news. Please try again later.</p>';
+                newsContainer.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
