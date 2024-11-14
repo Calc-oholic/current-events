@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latest News Headlines</title>
+    <title>UIL Current Events Study Tool</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -14,7 +14,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -24,7 +24,14 @@
             margin-bottom: 40px;
         }
 
-        .fetch-button {
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .fetch-button, .category-filter {
             background-color: #007bff;
             color: white;
             border: none;
@@ -35,46 +42,76 @@
             transition: background-color 0.2s;
         }
 
-        .fetch-button:hover {
-            background-color: #0056b3;
+        .category-filter {
+            background-color: #6c757d;
+        }
+
+        .category-filter.active {
+            background-color: #28a745;
+        }
+
+        .fetch-button:hover, .category-filter:hover {
+            opacity: 0.9;
         }
 
         .news-container {
-            display: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
 
         .article {
             background-color: white;
             border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
         }
 
-        .article h2 {
-            margin-top: 0;
-            color: #1a1a1a;
-            font-size: 20px;
+        .category-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: white;
+            text-transform: uppercase;
         }
 
-        .article p {
-            color: #666;
-            line-height: 1.6;
+        .notes-section {
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
         }
 
-        .article-meta {
-            font-size: 14px;
-            color: #888;
-            margin-top: 15px;
+        .notes-input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
-        .article a {
-            color: #007bff;
-            text-decoration: none;
+        .quiz-section {
+            margin-top: 10px;
         }
 
-        .article a:hover {
-            text-decoration: underline;
+        .quiz-button {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .quiz-container {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
         }
 
         .loading {
@@ -82,15 +119,72 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* Category colors */
+        .category-general { background-color: #6c757d; }
+        .category-business { background-color: #28a745; }
+        .category-technology { background-color: #17a2b8; }
+        .category-science { background-color: #dc3545; }
+        .category-health { background-color: #fd7e14; }
+        .category-sports { background-color: #6f42c1; }
+
+        .study-tips {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .flashcard-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .flashcard {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 600px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Latest News Headlines</h1>
-            <button id="fetchNews" class="fetch-button">NEW NEWS</button>
+            <h1>UIL Current Events Study Tool</h1>
+            <div class="controls">
+                <button id="fetchNews" class="fetch-button">NEW NEWS</button>
+                <button class="category-filter active" data-category="all">All</button>
+                <button class="category-filter" data-category="general">General</button>
+                <button class="category-filter" data-category="business">Business</button>
+                <button class="category-filter" data-category="technology">Technology</button>
+                <button class="category-filter" data-category="science">Science</button>
+                <button class="category-filter" data-category="health">Health</button>
+                <button class="category-filter" data-category="sports">Sports</button>
+            </div>
         </div>
         
+        <div class="study-tips">
+            <h3>UIL Study Tips</h3>
+            <ul>
+                <li>Focus on key details: Who, What, When, Where, Why</li>
+                <li>Pay attention to sources and dates</li>
+                <li>Connect events to broader themes</li>
+                <li>Use the notes feature to create study cards</li>
+                <li>Practice with the auto-generated quizzes</li>
+            </ul>
+        </div>
+
         <div id="loading" class="loading">
             Loading latest headlines...
         </div>
@@ -98,30 +192,103 @@
         <div id="newsContainer" class="news-container"></div>
     </div>
 
+    <div id="flashcardMode" class="flashcard-mode">
+        <div class="flashcard">
+            <div id="flashcardContent"></div>
+            <button onclick="closeFlashcard()">Close</button>
+        </div>
+    </div>
+
     <script>
+        let savedNotes = {};
+        let currentArticles = [];
+
+        function showFlashcard(content) {
+            document.getElementById('flashcardContent').innerHTML = content;
+            document.getElementById('flashcardMode').style.display = 'flex';
+        }
+
+        function closeFlashcard() {
+            document.getElementById('flashcardMode').style.display = 'none';
+        }
+
+        function filterArticles(category) {
+            const articles = document.querySelectorAll('.article');
+            articles.forEach(article => {
+                if (category === 'all' || article.dataset.category === category) {
+                    article.style.display = 'block';
+                } else {
+                    article.style.display = 'none';
+                }
+            });
+        }
+
+        document.querySelectorAll('.category-filter').forEach(button => {
+            button.addEventListener('click', (e) => {
+                document.querySelectorAll('.category-filter').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                filterArticles(e.target.dataset.category);
+            });
+        });
+
+        async function generateQuiz(article) {
+            try {
+                const response = await fetch('/api/quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ article }),
+                });
+                const questions = await response.json();
+                
+                let quizHtml = '<div class="quiz-questions">';
+                questions.forEach((q, index) => {
+                    quizHtml += `
+                        <div class="quiz-question">
+                            <p><strong>Q${index + 1}:</strong> ${q.question}</p>
+                            <button onclick="showAnswer(this, '${q.answer}')">Show Answer</button>
+                        </div>
+                    `;
+                });
+                quizHtml += '</div>';
+                
+                return quizHtml;
+            } catch (error) {
+                console.error('Error generating quiz:', error);
+                return '<p>Failed to generate quiz questions.</p>';
+            }
+        }
+
+        function showAnswer(button, answer) {
+            const answerElement = document.createElement('p');
+            answerElement.textContent = `Answer: ${answer}`;
+            button.parentNode.appendChild(answerElement);
+            button.style.display = 'none';
+        }
+
         document.getElementById('fetchNews').addEventListener('click', async () => {
             const newsContainer = document.getElementById('newsContainer');
             const loading = document.getElementById('loading');
             
-            // Show loading state
             loading.style.display = 'block';
             newsContainer.style.display = 'none';
             
             try {
                 const response = await fetch('/api/news');
-                const articles = await response.json();
+                currentArticles = await response.json();
                 
-                // Clear previous articles
                 newsContainer.innerHTML = '';
                 
-                // Add new articles
-                articles.forEach(article => {
+                currentArticles.forEach((article, index) => {
                     const articleElement = document.createElement('div');
                     articleElement.className = 'article';
+                    articleElement.dataset.category = article.category;
                     
                     const date = new Date(article.publishedAt).toLocaleDateString();
                     
                     articleElement.innerHTML = `
+                        <span class="category-badge category-${article.category}">${article.category}</span>
                         <h2>${article.title}</h2>
                         <p>${article.summary}</p>
                         <div class="article-meta">
@@ -129,19 +296,58 @@
                             <span>${date}</span> | 
                             <a href="${article.url}" target="_blank">Read more</a>
                         </div>
+                        <div class="notes-section">
+                            <textarea 
+                                class="notes-input" 
+                                placeholder="Add study notes..."
+                                onchange="saveNotes(${index}, this.value)"
+                            >${savedNotes[article.url] || ''}</textarea>
+                        </div>
+                        <div class="quiz-section">
+                            <button class="quiz-button" onclick="showQuiz(${index})">Generate Practice Questions</button>
+                            <div class="quiz-container" id="quiz-${index}"></div>
+                        </div>
                     `;
                     
                     newsContainer.appendChild(articleElement);
                 });
                 
-                // Show the news container
-                newsContainer.style.display = 'block';
+                newsContainer.style.display = 'grid';
             } catch (error) {
                 console.error('Error fetching news:', error);
                 newsContainer.innerHTML = '<p>Error loading news. Please try again later.</p>';
                 newsContainer.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
+            }
+        });
+
+        async function showQuiz(articleIndex) {
+            const quizContainer = document.getElementById(`quiz-${articleIndex}`);
+            const article = currentArticles[articleIndex];
+            
+            if (quizContainer.style.display === 'block') {
+                quizContainer.style.display = 'none';
+            } else {
+                quizContainer.innerHTML = 'Generating questions...';
+                quizContainer.style.display = 'block';
+                
+                const quizHtml = await generateQuiz(article);
+                quizContainer.innerHTML = quizHtml;
+            }
+        }
+
+        function saveNotes(articleIndex, notes) {
+            const article = currentArticles[articleIndex];
+            savedNotes[article.url] = notes;
+            localStorage.setItem('newsNotes', JSON.stringify(savedNotes));
+        }
+
+        // Load saved notes on page load
+        window.addEventListener('load', () => {
+            const savedNotesStr = localStorage.getItem('newsNotes');
+            if (savedNotesStr) {
+                savedNotes = JSON.parse(savedNotesStr);
             }
         });
     </script>
